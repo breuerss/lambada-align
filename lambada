@@ -43,7 +43,7 @@ our $year           = "2012";             # Year (of change).
 our $verbose        = 0;                  # Be loud and noisy (and global); default: silent.
 my $protInFile    = 'protein.gro';        # Protein coordinates file.
 my $protNdxInFile = '';                   # Protein NDX file.
-my $membInFile    = 'membrane.gro';       # Membrane coordinates file.
+my $membInFile    = 'membrane.gro';       # Membrane coordinates file. Layer should be in XY plane.
 my $membNdxInFile = '';                   # Membrane NDX file.
 my $groOutFile    = 'prot_memb.gro';      # Output GRO file.
 my $cgProtGroFile = '';                   # Output GRO file of the coarse-grained protein.
@@ -428,10 +428,12 @@ sub printHelp {
     print <<EndOfHelp;
 DESCRIPTION
 -----------
-LAMBADA reads the coordinate files of a membrane protein and a lipid bilayer,
-orients the protein according to its hydrophobic belt planes parallel to the
-XY plane of the simulation box, aligns the membrane then and puts out the combined
-system ready for protein insertion (e.g. using InflateGRO2).
+LAMBADA reads the coordinate files of a membrane protein and a lipid bilayer.
+The protein is oriented according to its hydrophobic belt planes parallel to the
+XY plane of the simulation box. The membrane is then aligned on the level
+of the hydrophobic belt. Hence, the input structure of the lipid bilayer has
+to be in the XY plane. The combined system is put out ready for protein
+insertion (e.g. using InflateGRO2).
 
 USAGE: lambada -f1 PROTEINGROFILE -f2 MEMBRANEGROFILE -o OUTPUTGROFILE
 
