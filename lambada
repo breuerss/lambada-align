@@ -33,7 +33,7 @@ use cmdline;
 use FileIO::gro;
 use protein;
 ################################################################################
-
+use File::Which;
 
 
 ### Default Parameters #########################################################
@@ -138,6 +138,40 @@ Cmdline::parser();
 
 
 
+############################# Get gromacs tools ################################
+
+my $editconf;
+my $make_ndx;
+sub prepareGromacsTools {
+    $editconf = getEditconf();
+    $make_ndx = getMakeNdx();
+}
+
+sub getEditconf {
+    return getGromacsTool('editconf');
+}
+
+sub getMakeNdx {
+    return getGromacsTool('make_ndx');
+}
+
+sub getGromacsTool {
+    my $toolname = shift;
+    my $tool = which($toolname);
+    unless ($tool) {
+        $tool = which('gmx');
+        unless(defined $tool) {
+            print "Neither '$toolname' nor 'gmx' could be found in PATH.\n";
+            exit 1;
+        }
+        $tool .= ' ' . $toolname;
+    }
+    return $tool;
+}
+
+prepareGromacsTools();
+
+
 ### Modifications after CMDLine ################################################
 $thicknHphobicUp  = $thicknHphobic/2;
 $thicknHphobicLow = $thicknHphobic/2;
@@ -199,12 +233,12 @@ if ($orient) {
             $protNdxInFile .= '.ndx';
         }
     }
-    `echo q | make_ndx -f $protInFile -o $protNdxInFile`;
+    `echo q | $make_ndx -f $protInFile -o $protNdxInFile`;
     if ($xWater) {
-        `echo 0 3 0 | editconf -f $protInFile -n $protNdxInFile -d 8 -princ -o oriented.princ.gro 1>> editconf.log 2>> editconf.log`;
+        `echo 0 3 0 | $editconf -f $protInFile -n $protNdxInFile -d 8 -princ -o oriented.princ.gro 1>> editconf.log 2>> editconf.log`;
     }
     else {
-        `echo 1 3 1 | editconf -f $protInFile -n $protNdxInFile -d 8 -princ -o oriented.princ.gro 1>> editconf.log 2>> editconf.log`;
+        `echo 1 3 1 | $editconf -f $protInFile -n $protNdxInFile -d 8 -princ -o oriented.princ.gro 1>> editconf.log 2>> editconf.log`;
     }
     ############################################################################
 
@@ -245,12 +279,12 @@ if ($orient) {
 
 
     ### Rotate the atomistic model #############################################
-    `echo q | make_ndx -f oriented.princ.gro -o temp.ndx`;
+    `echo q | $make_ndx -f oriented.princ.gro -o temp.ndx`;
     if ($xWater) {
-        `echo 3 0 | editconf -f oriented.princ.gro -n temp.ndx -d 2 -rotate $absMinScore{'xRotAng'} $absMinScore{'yRotAng'} 0 -o oriented.final.gro 1>> editconf.log 2>> editconf.log`;
+        `echo 3 0 | $editconf -f oriented.princ.gro -n temp.ndx -d 2 -rotate $absMinScore{'xRotAng'} $absMinScore{'yRotAng'} 0 -o oriented.final.gro 1>> editconf.log 2>> editconf.log`;
     }
     else {
-        `echo 3 1 | editconf -f oriented.princ.gro -n temp.ndx -d 2 -rotate $absMinScore{'xRotAng'} $absMinScore{'yRotAng'} 0 -o oriented.final.gro 1>> editconf.log 2>> editconf.log`;
+        `echo 3 1 | $editconf -f oriented.princ.gro -n temp.ndx -d 2 -rotate $absMinScore{'xRotAng'} $absMinScore{'yRotAng'} 0 -o oriented.final.gro 1>> editconf.log 2>> editconf.log`;
     }
     `rm temp.ndx`;
     ############################################################################
